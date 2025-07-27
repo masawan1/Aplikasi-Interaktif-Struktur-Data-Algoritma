@@ -1,462 +1,542 @@
 <!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dasar-Dasar Struktur Data & Algoritma</title>
+    <title>Simulasi Struktur Data & Algoritma</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Warm Neutrals -->
-    <!-- Application Structure Plan: Aplikasi ini dirancang sebagai SPA vertikal dengan tiga bagian utama yang dapat dinavigasi: Struktur Data, Algoritma, dan Hubungan Keduanya. Struktur ini dipilih untuk memfasilitasi alur belajar yang logis, dari konsep dasar ke aplikasi praktis. Interaktivitas adalah kunci: bagian Struktur Data menggunakan simulasi visual untuk setiap tipe (Array, Linked List, Stack, Queue) agar pengguna dapat 'merasakan' cara kerjanya. Bagian Algoritma juga memiliki simulasi langkah-demi-langkah. Puncaknya adalah bagian Hubungan, yang secara visual membandingkan kinerja algoritma pada struktur data yang berbeda menggunakan bagan dinamis, mengubah konsep abstrak kompleksitas menjadi sesuatu yang nyata dan mudah dipahami. -->
-    <!-- Visualization & Content Choices: Info: Definisi & Analogi -> Presentation: Teks & ikon HTML -> Interaction: Tidak ada -> Justification: Pengenalan konsep dasar. | Goal: Mengorganisir -> Info: 4 tipe struktur data -> Presentation: Card interaktif dengan simulasi visual (div HTML + CSS) -> Interaction: Klik tombol (Push, Pop, Enqueue, Dequeue) untuk memanipulasi visualisasi -> Justification: Membuat konsep abstrak menjadi konkret dan mudah dipahami. | Goal: Compare -> Info: Kinerja Linear vs Binary Search -> Presentation: Bagan batang Chart.js & visualisasi pencarian berdampingan -> Interaction: Slider untuk mengubah ukuran data dan melihat dampak pada bagan -> Justification: Menunjukkan secara visual dampak pemilihan algoritma terhadap efisiensi. | Goal: Compare -> Info: Penyisipan Array vs Linked List -> Presentation: Visualisasi berdampingan (div HTML + CSS) -> Interaction: Klik tombol untuk memicu animasi -> Justification: Menyoroti trade-off antara struktur data yang berbeda. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #FDFBF8;
-            color: #4A4A4A;
         }
-        .nav-link {
-            transition: all 0.3s ease;
-            border-bottom: 2px solid transparent;
+        .simulation-container {
+            min-height: 280px; /* Adjusted height for mobile */
+            transition: all 0.3s ease-in-out;
         }
-        .nav-link:hover, .nav-link.active {
-            color: #D35400;
-            border-bottom-color: #D35400;
-        }
-        .ds-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .ds-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-        .sim-box {
-            min-height: 50px;
-            border: 2px dashed #D1D5DB;
-            transition: all 0.3s ease;
-        }
-        .sim-item {
-            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        .data-element {
+            transition: all 0.5s ease;
             transform-origin: bottom;
         }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 350px;
-            max-height: 40vh;
+        .highlight-search {
+            border-color: #fbbf24; /* amber-400 */
+            transform: scale(1.1);
         }
-        /* Removed .back-to-top fixed positioning */
+        .highlight-found {
+            background-color: #4ade80; /* green-400 */
+            border-color: #22c55e; /* green-600 */
+            color: white;
+        }
+        .highlight-discard {
+            background-color: #f3f4f6; /* gray-100 */
+            opacity: 0.5;
+        }
+        .nav-button {
+            transition: all 0.2s ease;
+        }
+        .nav-button.active {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+        }
     </style>
 </head>
-<body class="antialiased">
+<body class="bg-gray-100 text-gray-800">
 
-    <!-- Header & Navigation -->
-    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
-        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-[#D35400]">Dasar Informatika</h1>
-            <div class="hidden md:flex space-x-8">
-                <a href="#struktur-data" class="nav-link font-semibold pb-1">Struktur Data</a>
-                <a href="#algoritma" class="nav-link font-semibold pb-1">Algoritma</a>
-                <a href="#hubungan" class="nav-link font-semibold pb-1">Hubungan Keduanya</a>
-            </div>
-            <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none">
-                <span class="text-2xl">☰</span>
-            </button>
-        </nav>
-        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 space-y-2">
-            <a href="#struktur-data" class="block nav-link font-semibold py-2">Struktur Data</a>
-            <a href="#algoritma" class="block nav-link font-semibold py-2">Algoritma</a>
-            <a href="#hubungan" class="block nav-link font-semibold py-2">Hubungan Keduanya</a>
-        </div>
-    </header>
-
-    <main class="container mx-auto px-6 py-12">
-        <!-- Section 1: Struktur Data -->
-        <section id="struktur-data" class="mb-24 scroll-mt-20">
-            <h2 class="text-4xl font-bold text-center text-[#2C3E50] mb-4">Bagian 1: Struktur Data</h2>
-            <p class="text-lg text-center max-w-3xl mx-auto mb-12">
-                Bagian ini memperkenalkan konsep fundamental tentang bagaimana data disimpan dan diatur di dalam komputer. Memahami struktur data adalah langkah pertama untuk menulis program yang efisien. Anda dapat berinteraksi dengan simulasi di bawah ini untuk melihat bagaimana setiap struktur data beroperasi secara visual.
-            </p>
-
-            <div class="grid md:grid-cols-2 gap-8">
-                <!-- Array Card -->
-                <div class="ds-card bg-white p-6 rounded-xl shadow-md">
-                    <h3 class="text-2xl font-bold text-[#D35400] mb-3">1. Array (Larik)</h3>
-                    <p class="mb-4">Kumpulan elemen bertipe sama dalam memori yang berurutan. Analogi: Deretan kotak parkir bernomor.</p>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-semibold mb-2">Simulasi:</h4>
-                        <div id="array-sim" class="sim-box flex items-center justify-center space-x-2 p-4 rounded-lg bg-white mb-4 flex-wrap"></div>
-                        <div class="flex space-x-2">
-                            <button id="add-array" class="w-full bg-[#D35400] text-white py-2 px-4 rounded-lg hover:bg-[#E67E22] transition">Tambah Elemen</button>
-                            <button id="remove-array" class="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition">Hapus Elemen</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Linked List Card -->
-                <div class="ds-card bg-white p-6 rounded-xl shadow-md">
-                    <h3 class="text-2xl font-bold text-[#D35400] mb-3">2. Linked List (Daftar Berantai)</h3>
-                    <p class="mb-4">Kumpulan elemen (*node*) yang terhubung melalui *pointer*. Analogi: Rombongan orang berpegangan tangan.</p>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-semibold mb-2">Simulasi:</h4>
-                        <div id="ll-sim" class="sim-box flex items-center justify-center space-x-2 p-4 rounded-lg bg-white mb-4 flex-wrap"></div>
-                        <div class="flex space-x-2">
-                            <button id="add-ll" class="w-full bg-[#D35400] text-white py-2 px-4 rounded-lg hover:bg-[#E67E22] transition">Tambah Node</button>
-                            <button id="remove-ll" class="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition">Hapus Node</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Stack Card -->
-                <div class="ds-card bg-white p-6 rounded-xl shadow-md">
-                    <h3 class="text-2xl font-bold text-[#D35400] mb-3">3. Stack (Tumpukan) - LIFO</h3>
-                    <p class="mb-4">Elemen terakhir masuk, pertama keluar. Analogi: Tumpukan piring.</p>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-semibold mb-2">Simulasi:</h4>
-                        <div id="stack-sim" class="sim-box flex flex-col-reverse items-center p-4 rounded-lg bg-white mb-4 h-48"></div>
-                        <div class="flex space-x-2">
-                            <button id="push-stack" class="w-full bg-[#D35400] text-white py-2 px-4 rounded-lg hover:bg-[#E67E22] transition">Push</button>
-                            <button id="pop-stack" class="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition">Pop</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Queue Card -->
-                <div class="ds-card bg-white p-6 rounded-xl shadow-md">
-                    <h3 class="text-2xl font-bold text-[#D35400] mb-3">4. Queue (Antrean) - FIFO</h3>
-                    <p class="mb-4">Elemen pertama masuk, pertama keluar. Analogi: Antrean di loket.</p>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-semibold mb-2">Simulasi:</h4>
-                        <div id="queue-sim" class="sim-box flex items-center p-4 rounded-lg bg-white mb-4 h-48"></div>
-                        <div class="flex space-x-2">
-                            <button id="enqueue" class="w-full bg-[#D35400] text-white py-2 px-4 rounded-lg hover:bg-[#E67E22] transition">Enqueue</button>
-                            <button id="dequeue" class="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition">Dequeue</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 2: Algoritma -->
-        <section id="algoritma" class="mb-24 scroll-mt-20">
-            <h2 class="text-4xl font-bold text-center text-[#2C3E50] mb-4">Bagian 2: Algoritma</h2>
-            <p class="text-lg text-center max-w-3xl mx-auto mb-12">
-                Algoritma adalah 'resep' atau serangkaian langkah untuk menyelesaikan masalah. Di sini, kita akan melihat karakteristik algoritma yang baik dan mensimulasikan salah satu algoritma paling dasar: menemukan nilai terbesar dalam suatu set data.
-            </p>
-            
-            <div class="bg-white p-8 rounded-xl shadow-md">
-                <h3 class="text-2xl font-bold text-center text-[#D35400] mb-6">Simulasi: Menemukan Angka Terbesar</h3>
-                <div id="algo-sim-data" class="flex justify-center items-end space-x-2 p-4 h-48 bg-gray-100 rounded-lg mb-4"></div>
-                <div class="text-center mb-4">
-                    <p>Maksimum saat ini: <span id="max-val" class="font-bold text-2xl text-[#D35400]">?</span></p>
-                    <p>Langkah: <span id="step-counter" class="font-bold">0</span></p>
-                </div>
-                <div class="flex justify-center space-x-2">
-                    <button id="start-algo" class="bg-[#D35400] text-white py-2 px-6 rounded-lg hover:bg-[#E67E22] transition">Mulai</button>
-                    <button id="reset-algo" class="bg-gray-600 text-white py-2 px-6 rounded-lg hover:bg-gray-700 transition">Reset</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 3: Hubungan Keduanya -->
-        <section id="hubungan" class="mb-12 scroll-mt-20">
-            <h2 class="text-4xl font-bold text-center text-[#2C3E50] mb-4">Bagian 3: Hubungan Keduanya</h2>
-            <p class="text-lg text-center max-w-3xl mx-auto mb-12">
-                Struktur data dan algoritma adalah dua sisi dari mata uang yang sama. Pilihan struktur data sangat memengaruhi efisiensi algoritma. Di bagian ini, kita akan membandingkan kinerja algoritma pencarian pada struktur data yang berbeda untuk melihat dampaknya secara nyata.
-            </p>
-            <div class="bg-white p-8 rounded-xl shadow-md">
-                <h3 class="text-2xl font-bold text-center text-[#D35400] mb-6">Perbandingan Kinerja: Linear vs. Binary Search</h3>
-                <div class="mb-6">
-                    <label for="data-size-slider" class="block font-semibold mb-2 text-center">Ukuran Data: <span id="data-size-label">50</span></label>
-                    <input id="data-size-slider" type="range" min="10" max="1000" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                </div>
-                <div class="chart-container">
-                    <canvas id="performanceChart"></canvas>
-                </div>
-                <p class="text-center mt-4 text-gray-600">Geser slider untuk melihat bagaimana jumlah langkah (kompleksitas) berubah seiring dengan bertambahnya ukuran data. Perhatikan betapa efisiennya Binary Search pada data terurut.</p>
-            </div>
-        </section>
-
-        <!-- Back to Dashboard Button - Moved Here -->
-        <div class="text-center mt-12 mb-24">
-            <button id="back-to-dashboard-btn" class="bg-[#D35400] text-white py-3 px-8 rounded-lg shadow-lg hover:bg-[#E67E22] transition-all duration-300 font-semibold">
+    <div class="container mx-auto p-4 md:p-6">
+        <!-- Tombol Kembali ke Dashboard -->
+        <div class="w-full flex justify-start mb-6">
+            <a href="https://masawan1.github.io/dashboardinformatika/" 
+               target="_blank"
+               class="inline-flex items-center gap-2 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base shadow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
                 Kembali ke Dashboard
-            </button>
+            </a>
         </div>
-    </main>
 
-    <footer class="bg-gray-800 text-white text-center p-4 mt-16">
-        <p>&copy; 2025 Dasar Informatika Interaktif. Dibuat untuk tujuan edukasi.</p>
-    </footer>
+        <header class="text-center mb-6 md:mb-8">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Media Simulasi Interaktif</h1>
+            <p class="text-base md:text-lg text-gray-600 mt-2">Struktur Data dan Algoritma</p>
+        </header>
+
+        <!-- Navigasi Simulasi -->
+        <nav class="flex flex-wrap justify-center gap-2 mb-6 md:mb-8">
+            <button onclick="showSimulation('stack')" class="nav-button active py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 text-sm sm:text-base">Stack</button>
+            <button onclick="showSimulation('queue')" class="nav-button py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 text-sm sm:text-base">Queue</button>
+            <button onclick="showSimulation('array-vs-list')" class="nav-button py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 text-sm sm:text-base">Array vs List</button>
+            <button onclick="showSimulation('search')" class="nav-button py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 text-sm sm:text-base">Pencarian</button>
+        </nav>
+
+        <main>
+            <!-- Simulasi Stack -->
+            <div id="stack-sim" class="simulation-content bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-2">Stack (Tumpukan) - LIFO</h2>
+                <p class="text-gray-600 mb-4 text-sm sm:text-base">Elemen terakhir yang masuk (Push) adalah elemen pertama yang keluar (Pop).</p>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/3">
+                        <h3 class="font-semibold mb-2">Kontrol</h3>
+                        <div class="space-y-3">
+                            <input type="text" id="stack-input" placeholder="Masukkan nilai (cth: 10)" class="w-full p-2 border rounded-md">
+                            <button onclick="stackPush()" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">Push</button>
+                            <button onclick="stackPop()" class="w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600">Pop</button>
+                            <button onclick="resetStack()" class="w-full bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600">Reset</button>
+                        </div>
+                        <p id="stack-status" class="mt-4 text-sm text-gray-500 h-10"></p>
+                    </div>
+                    <div class="w-full md:w-2/3 bg-gray-50 p-4 rounded-lg border border-dashed">
+                        <h3 class="font-semibold text-center mb-4">Visualisasi Tumpukan</h3>
+                        <div id="stack-container" class="simulation-container flex flex-col-reverse items-center justify-start">
+                            <!-- Elemen stack akan ditambahkan di sini -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulasi Queue -->
+            <div id="queue-sim" class="simulation-content bg-white p-4 sm:p-6 rounded-xl shadow-lg hidden">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-2">Queue (Antrean) - FIFO</h2>
+                <p class="text-gray-600 mb-4 text-sm sm:text-base">Elemen pertama yang masuk (Enqueue) adalah elemen pertama yang keluar (Dequeue).</p>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/3">
+                        <h3 class="font-semibold mb-2">Kontrol</h3>
+                        <div class="space-y-3">
+                            <input type="text" id="queue-input" placeholder="Masukkan nilai (cth: A)" class="w-full p-2 border rounded-md">
+                            <button onclick="queueEnqueue()" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">Enqueue</button>
+                            <button onclick="queueDequeue()" class="w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600">Dequeue</button>
+                            <button onclick="resetQueue()" class="w-full bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600">Reset</button>
+                        </div>
+                        <p id="queue-status" class="mt-4 text-sm text-gray-500 h-10"></p>
+                    </div>
+                    <div class="w-full md:w-2/3 bg-gray-50 p-4 rounded-lg border border-dashed">
+                        <h3 class="font-semibold text-center mb-4">Visualisasi Antrean</h3>
+                        <div class="flex justify-between text-sm font-bold mb-2 px-2"><span>DEPAN</span><span>BELAKANG</span></div>
+                        <div id="queue-container" class="simulation-container flex flex-row items-center justify-start space-x-2 overflow-x-auto p-2">
+                            <!-- Elemen queue akan ditambahkan di sini -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Simulasi Array vs Linked List -->
+            <div id="array-vs-list-sim" class="simulation-content bg-white p-4 sm:p-6 rounded-xl shadow-lg hidden">
+                <h2 class="text-xl sm:text-2xl font-semibold mb-2">Array vs. Linked List</h2>
+                <p class="text-gray-600 mb-4 text-sm sm:text-base">Lihat perbedaan saat menyisipkan elemen di tengah.</p>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/3">
+                        <h3 class="font-semibold mb-2">Kontrol</h3>
+                        <div class="space-y-3">
+                            <input type="text" id="insert-input" placeholder="Nilai baru (cth: 99)" class="w-full p-2 border rounded-md">
+                            <input type="number" id="insert-index" placeholder="Di indeks ke... (cth: 2)" class="w-full p-2 border rounded-md" min="0" max="4">
+                            <button onclick="insertElement()" class="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600">Sisipkan Elemen</button>
+                            <button onclick="resetInsert()" class="w-full bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600">Reset</button>
+                        </div>
+                         <p id="insert-status" class="mt-4 text-sm text-gray-500 h-10"></p>
+                    </div>
+                    <div class="w-full md:w-2/3 space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-dashed">
+                             <h3 class="font-semibold text-center mb-4">Array (Harus menggeser)</h3>
+                             <div id="array-insert-container" class="simulation-container flex flex-row items-center justify-center gap-1"></div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-dashed">
+                             <h3 class="font-semibold text-center mb-4">Linked List (Ubah pointer)</h3>
+                             <div id="list-insert-container" class="simulation-container flex flex-row items-center justify-center gap-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulasi Algoritma Pencarian -->
+            <div id="search-sim" class="simulation-content bg-white p-4 sm:p-6 rounded-xl shadow-lg hidden">
+                 <h2 class="text-xl sm:text-2xl font-semibold mb-2">Algoritma Pencarian</h2>
+                <p class="text-gray-600 mb-4 text-sm sm:text-base">Bandingkan efisiensi <span class="font-semibold">Linear Search</span> vs <span class="font-semibold">Binary Search</span>.</p>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/3">
+                        <h3 class="font-semibold mb-2">Kontrol</h3>
+                        <div class="space-y-3">
+                            <input type="number" id="search-input" placeholder="Cari angka... (1-50)" class="w-full p-2 border rounded-md">
+                            <button onclick="startSearch('linear')" class="w-full bg-cyan-500 text-white py-2 rounded-md hover:bg-cyan-600">Mulai Linear Search</button>
+                            <button onclick="startSearch('binary')" class="w-full bg-purple-500 text-white py-2 rounded-md hover:bg-purple-600">Mulai Binary Search</button>
+                            <button onclick="resetSearch()" class="w-full bg-gray-500 text-white py-2 rounded-md hover:bg-gray-600">Reset Data</button>
+                        </div>
+                        <p id="search-status" class="mt-4 text-sm text-red-500 h-10"></p>
+                    </div>
+                    <div class="w-full md:w-2/3 space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-dashed">
+                             <h3 class="font-semibold mb-2">Linear Search (Data Acak)</h3>
+                             <p class="text-sm text-gray-500 mb-2">Langkah: <span id="linear-steps" class="font-bold">0</span></p>
+                             <div id="linear-search-container" class="simulation-container flex flex-row flex-wrap items-center justify-center gap-2"></div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-dashed">
+                             <h3 class="font-semibold mb-2">Binary Search (Data Terurut)</h3>
+                             <p class="text-sm text-gray-500 mb-2">Langkah: <span id="binary-steps" class="font-bold">0</span></p>
+                             <div id="binary-search-container" class="simulation-container flex flex-row flex-wrap items-center justify-center gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Mobile Menu
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const mobileMenu = document.getElementById('mobile-menu');
-            mobileMenuButton.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
+        // --- State Global ---
+        let stackData = [21, 5, 13];
+        let queueData = ['A', 'B', 'C'];
+        let arrayInsertData = [10, 20, 30, 40, 50];
+        let listInsertData = [10, 20, 30, 40, 50];
+        let searchData = [];
+        let isWorking = false; // Prevents multiple operations at once
 
-            // --- Struktur Data Simulations ---
-            const createSimItem = (value, type) => {
-                const item = document.createElement('div');
-                item.classList.add('sim-item', 'bg-[#2980B9]', 'text-white', 'font-bold', 'rounded-md', 'flex', 'items-center', 'justify-center', 'shadow-lg');
-                item.textContent = value;
-                if (type === 'array') {
-                    item.classList.add('w-12', 'h-12');
-                } else if (type === 'll') {
-                    item.classList.add('w-16', 'h-10', 'relative');
-                    const arrow = document.createElement('div');
-                    arrow.classList.add('absolute', '-right-5', 'top-1/2', '-translate-y-1/2', 'text-gray-400', 'font-mono');
-                    arrow.textContent = '→';
-                    item.appendChild(arrow);
-                } else if (type === 'stack') {
-                    item.classList.add('w-24', 'h-8', 'mb-1');
-                } else if (type === 'queue') {
-                    item.classList.add('w-12', 'h-12', 'mx-1', 'flex-shrink-0');
-                }
-                return item;
-            };
+        // --- Fungsi Utilitas ---
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+        const showStatus = (elementId, message, isError = false, duration = 3000) => {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = `mt-4 text-sm h-10 ${isError ? 'text-red-500' : 'text-gray-500'}`;
+            if (duration > 0) {
+                setTimeout(() => { el.textContent = ''; }, duration);
+            }
+        };
 
-            // Array
-            const arraySim = document.getElementById('array-sim');
-            let arrayData = [10, 20, 30];
-            const renderArray = () => {
-                arraySim.innerHTML = '';
-                arrayData.forEach(val => arraySim.appendChild(createSimItem(val, 'array')));
-            };
-            document.getElementById('add-array').addEventListener('click', () => {
-                if (arrayData.length < 8) {
-                    arrayData.push(Math.floor(Math.random() * 90) + 10);
-                    renderArray();
-                }
-            });
-            document.getElementById('remove-array').addEventListener('click', () => {
-                if (arrayData.length > 0) {
-                    arrayData.pop();
-                    renderArray();
-                }
-            });
-            renderArray();
+        // --- Logika Navigasi ---
+        function showSimulation(simName) {
+            document.querySelectorAll('.simulation-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`${simName}-sim`).classList.remove('hidden');
 
-            // Linked List
-            const llSim = document.getElementById('ll-sim');
-            let llData = [5, 12, 99];
-            const renderLL = () => {
-                llSim.innerHTML = '';
-                llData.forEach((val, index) => {
-                    const node = createSimItem(val, 'll');
-                    if (index === llData.length - 1) {
-                        node.querySelector('div').remove();
-                    }
-                    llSim.appendChild(node);
-                });
-            };
-            document.getElementById('add-ll').addEventListener('click', () => {
-                if (llData.length < 5) {
-                    llData.push(Math.floor(Math.random() * 90) + 10);
-                    renderLL();
-                }
-            });
-            document.getElementById('remove-ll').addEventListener('click', () => {
-                if (llData.length > 0) {
-                    llData.pop();
-                    renderLL();
-                }
-            });
-            renderLL();
+            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`button[onclick="showSimulation('${simName}')"]`).classList.add('active');
+        }
 
-            // Stack
-            const stackSim = document.getElementById('stack-sim');
-            let stackData = [1, 2];
-            const renderStack = () => {
-                stackSim.innerHTML = '';
-                stackData.forEach(val => stackSim.appendChild(createSimItem(val, 'stack')));
-            };
-            document.getElementById('push-stack').addEventListener('click', () => {
-                if (stackData.length < 5) {
-                    stackData.push(stackData.length + 1);
-                    renderStack();
+        // --- Logika Stack ---
+        const stackContainer = document.getElementById('stack-container');
+        const stackInput = document.getElementById('stack-input');
+
+        function renderStack() {
+            stackContainer.innerHTML = '';
+            if (stackData.length === 0) {
+                 stackContainer.innerHTML = '<p class="text-gray-400">Tumpukan kosong</p>';
+                 return;
+            }
+            stackData.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = 'data-element bg-blue-400 text-white w-2/3 sm:w-1/2 md:w-32 text-center py-3 rounded-md shadow mb-2';
+                el.textContent = item;
+                if (index === stackData.length - 1) {
+                    const topLabel = document.createElement('span');
+                    topLabel.className = 'absolute -top-6 text-xs sm:text-sm font-semibold text-blue-600';
+                    topLabel.textContent = 'PUNCAK';
+                    el.classList.add('relative');
+                    el.appendChild(topLabel);
                 }
+                stackContainer.appendChild(el);
             });
-            document.getElementById('pop-stack').addEventListener('click', () => {
-                if (stackData.length > 0) {
-                    stackData.pop();
-                    renderStack();
-                }
-            });
+        }
+
+        function stackPush() {
+            if (isWorking) return;
+            if (stackData.length >= 8) {
+                showStatus('stack-status', 'Tumpukan sudah penuh!', true);
+                return;
+            }
+            if (stackInput.value.trim() === '') {
+                showStatus('stack-status', 'Input tidak boleh kosong.', true);
+                return;
+            }
+            stackData.push(stackInput.value);
+            stackInput.value = '';
             renderStack();
+            showStatus('stack-status', `Elemen "${stackData[stackData.length - 1]}" ditambahkan.`);
+        }
 
-            // Queue
-            const queueSim = document.getElementById('queue-sim');
-            let queueData = [18, 4, 22];
-            const renderQueue = () => {
-                queueSim.innerHTML = '';
-                queueData.forEach(val => queueSim.appendChild(createSimItem(val, 'queue')));
-            };
-            document.getElementById('enqueue').addEventListener('click', () => {
-                if (queueData.length < 6) {
-                    queueData.push(Math.floor(Math.random() * 90) + 10);
-                    renderQueue();
-                }
+        function stackPop() {
+            if (isWorking) return;
+            if (stackData.length === 0) {
+                showStatus('stack-status', 'Tumpukan sudah kosong.', true);
+                return;
+            }
+            const popped = stackData.pop();
+            renderStack();
+            showStatus('stack-status', `Elemen "${popped}" diambil.`);
+        }
+        
+        function resetStack() {
+            if (isWorking) return;
+            stackData = [21, 5, 13];
+            renderStack();
+            showStatus('stack-status', 'Tumpukan direset.');
+        }
+
+        // --- Logika Queue ---
+        const queueContainer = document.getElementById('queue-container');
+        const queueInput = document.getElementById('queue-input');
+
+        function renderQueue() {
+            queueContainer.innerHTML = '';
+            if (queueData.length === 0) {
+                 queueContainer.innerHTML = '<p class="text-gray-400 w-full text-center">Antrean kosong</p>';
+                 return;
+            }
+            queueData.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'data-element flex-shrink-0 bg-green-400 text-white w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-base sm:text-lg font-bold rounded-full shadow';
+                el.textContent = item;
+                queueContainer.appendChild(el);
             });
-            document.getElementById('dequeue').addEventListener('click', () => {
-                if (queueData.length > 0) {
-                    queueData.shift();
-                    renderQueue();
-                }
-            });
+        }
+
+        function queueEnqueue() {
+            if (isWorking) return;
+             if (queueData.length >= 8) {
+                showStatus('queue-status', 'Antrean sudah penuh!', true);
+                return;
+            }
+            if (queueInput.value.trim() === '') {
+                showStatus('queue-status', 'Input tidak boleh kosong.', true);
+                return;
+            }
+            queueData.push(queueInput.value);
+            queueInput.value = '';
             renderQueue();
+            showStatus('queue-status', `Elemen "${queueData[queueData.length - 1]}" masuk antrean.`);
+        }
 
-            // --- Algoritma Simulation ---
-            const algoDataContainer = document.getElementById('algo-sim-data');
-            const maxValSpan = document.getElementById('max-val');
-            const stepCounterSpan = document.getElementById('step-counter');
-            let algoData = [];
-            let currentStep = 0;
-            let maxFound = -1;
-            let intervalId;
+        function queueDequeue() {
+            if (isWorking) return;
+            if (queueData.length === 0) {
+                showStatus('queue-status', 'Antrean sudah kosong.', true);
+                return;
+            }
+            const dequeued = queueData.shift();
+            renderQueue();
+            showStatus('queue-status', `Elemen "${dequeued}" keluar dari antrean.`);
+        }
+        
+        function resetQueue() {
+            if (isWorking) return;
+            queueData = ['A', 'B', 'C'];
+            renderQueue();
+            showStatus('queue-status', 'Antrean direset.');
+        }
+        
+        // --- Logika Array vs Linked List ---
+        const arrayInsertContainer = document.getElementById('array-insert-container');
+        const listInsertContainer = document.getElementById('list-insert-container');
+        const insertInput = document.getElementById('insert-input');
+        const insertIndex = document.getElementById('insert-index');
+        
+        function renderInsertVisuals() {
+            arrayInsertContainer.innerHTML = '';
+            arrayInsertData.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'data-element bg-indigo-400 text-white w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center rounded-md shadow-md border-2 border-indigo-500 text-sm sm:text-base';
+                el.textContent = item;
+                arrayInsertContainer.appendChild(el);
+            });
 
-            const renderAlgoData = (highlightIndex = -1, maxIndex = -1) => {
-                algoDataContainer.innerHTML = '';
-                algoData.forEach((val, index) => {
-                    const bar = document.createElement('div');
-                    bar.style.height = `${val}%`;
-                    bar.classList.add('w-8', 'bg-[#2980B9]', 'rounded-t-md', 'transition-all', 'duration-300');
-                    if (index === highlightIndex) {
-                        bar.classList.remove('bg-[#2980B9]');
-                        bar.classList.add('bg-[#D35400]');
-                    }
-                    if (index === maxIndex) {
-                        bar.classList.remove('bg-[#2980B9]', 'bg-[#D35400]');
-                        bar.classList.add('bg-[#27AE60]');
-                    }
-                    algoDataContainer.appendChild(bar);
-                });
-            };
+            listInsertContainer.innerHTML = '';
+            listInsertData.forEach((item, index) => {
+                const node = document.createElement('div');
+                node.className = 'flex items-center';
+                const el = document.createElement('div');
+                el.className = 'data-element bg-teal-400 text-white w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center rounded-full shadow-md border-2 border-teal-500 text-sm sm:text-base';
+                el.textContent = item;
+                node.appendChild(el);
 
-            const resetAlgo = () => {
-                clearInterval(intervalId);
-                algoData = Array.from({ length: 10 }, () => Math.floor(Math.random() * 80) + 20);
-                currentStep = 0;
-                maxFound = -1;
-                maxValSpan.textContent = '?';
-                stepCounterSpan.textContent = '0';
-                renderAlgoData();
-            };
+                if (index < listInsertData.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'text-teal-500 font-bold text-xl sm:text-2xl mx-1 sm:mx-2';
+                    arrow.innerHTML = '&rarr;';
+                    node.appendChild(arrow);
+                }
+                listInsertContainer.appendChild(node);
+            });
+        }
 
-            const startAlgo = () => {
-                resetAlgo();
-                maxFound = 0;
-                maxValSpan.textContent = algoData[0];
-                renderAlgoData(-1, 0);
+        async function insertElement() {
+            if (isWorking) return;
+            const value = insertInput.value.trim();
+            const index = parseInt(insertIndex.value);
 
-                intervalId = setInterval(() => {
-                    currentStep++;
-                    if (currentStep >= algoData.length) {
-                        clearInterval(intervalId);
-                        renderAlgoData(-1, maxFound);
-                        return;
-                    }
-                    
-                    stepCounterSpan.textContent = currentStep;
-                    if (algoData[currentStep] > algoData[maxFound]) {
-                        maxFound = currentStep;
-                        maxValSpan.textContent = algoData[maxFound];
-                    }
-                    renderAlgoData(currentStep, maxFound);
-                }, 800);
-            };
+            if (value === '' || isNaN(index)) {
+                showStatus('insert-status', 'Nilai dan indeks harus diisi.', true);
+                return;
+            }
+            if (index < 0 || index > arrayInsertData.length) {
+                 showStatus('insert-status', `Indeks harus antara 0 dan ${arrayInsertData.length}.`, true);
+                return;
+            }
+            if (arrayInsertData.length >= 7) {
+                showStatus('insert-status', 'Kapasitas visualisasi penuh.', true);
+                return;
+            }
+            
+            isWorking = true;
+            showStatus('insert-status', 'Array: Menggeser elemen...', false, 0);
+            const arrayElements = arrayInsertContainer.children;
+            for (let i = arrayInsertData.length - 1; i >= index; i--) {
+                arrayElements[i].style.transform = 'translateX(20px)';
+                await sleep(150);
+                arrayElements[i].style.transform = 'translateX(0)';
+            }
+            await sleep(200);
+            arrayInsertData.splice(index, 0, value);
+            renderInsertVisuals();
+            
+            await sleep(500);
 
-            document.getElementById('start-algo').addEventListener('click', startAlgo);
-            document.getElementById('reset-algo').addEventListener('click', resetAlgo);
-            resetAlgo();
+            showStatus('insert-status', 'Linked List: Mengubah pointer...', false, 0);
+            await sleep(500);
+            listInsertData.splice(index, 0, value);
+            renderInsertVisuals();
+            await sleep(200);
+            showStatus('insert-status', 'Selesai! Perhatikan perbedaannya.');
+            isWorking = false;
+        }
 
-            // --- Performance Chart ---
-            const ctx = document.getElementById('performanceChart').getContext('2d');
-            const dataSizeSlider = document.getElementById('data-size-slider');
-            const dataSizeLabel = document.getElementById('data-size-label');
+        function resetInsert() {
+            if (isWorking) return;
+            arrayInsertData = [10, 20, 30, 40, 50];
+            listInsertData = [10, 20, 30, 40, 50];
+            renderInsertVisuals();
+            showStatus('insert-status', 'Visualisasi direset.');
+        }
 
-            const performanceChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Linear Search (Worst Case)', 'Binary Search (Worst Case)'],
-                    datasets: [{
-                        label: 'Jumlah Langkah Maksimum',
-                        data: [50, Math.ceil(Math.log2(50))],
-                        backgroundColor: [
-                            'rgba(211, 84, 0, 0.6)',
-                            'rgba(41, 128, 185, 0.6)'
-                        ],
-                        borderColor: [
-                            'rgba(211, 84, 0, 1)',
-                            'rgba(41, 128, 185, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Jumlah Langkah (Kompleksitas)'
-                            }
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Perbandingan Kompleksitas Pencarian',
-                            font: {
-                                size: 16
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                title: function(tooltipItems) {
-                                    const item = tooltipItems[0];
-                                    let label = item.chart.data.labels[item.dataIndex];
-                                    if (Array.isArray(label)) {
-                                      return label.join(' ');
-                                    } else {
-                                      return label;
-                                    }
-                                }
-                            }
-                        }
+        // --- Logika Algoritma Pencarian ---
+        const linearContainer = document.getElementById('linear-search-container');
+        const binaryContainer = document.getElementById('binary-search-container');
+        const searchInput = document.getElementById('search-input');
+
+        function generateSearchData() {
+            searchData = [];
+            while(searchData.length < 15){
+                const r = Math.floor(Math.random() * 50) + 1;
+                if(searchData.indexOf(r) === -1) searchData.push(r);
+            }
+        }
+
+        function renderSearchArrays() {
+            linearContainer.innerHTML = '';
+            searchData.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'data-element border-2 border-gray-400 bg-white w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg shadow text-sm';
+                el.textContent = item;
+                linearContainer.appendChild(el);
+            });
+            
+            binaryContainer.innerHTML = '';
+            const sortedData = [...searchData].sort((a, b) => a - b);
+            sortedData.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'data-element border-2 border-gray-400 bg-white w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg shadow text-sm';
+                el.textContent = item;
+                binaryContainer.appendChild(el);
+            });
+        }
+
+        async function startSearch(type) {
+            if (isWorking) return;
+            const target = parseInt(searchInput.value);
+            if (isNaN(target)) {
+                showStatus('search-status', 'Masukkan angka yang valid.', true);
+                return;
+            }
+            isWorking = true;
+            resetHighlights();
+            
+            if (type === 'linear') {
+                await linearSearch(target);
+            } else {
+                await binarySearch(target);
+            }
+            isWorking = false;
+        }
+
+        async function linearSearch(target) {
+            const stepsEl = document.getElementById('linear-steps');
+            const elements = linearContainer.children;
+            let steps = 0;
+            let found = false;
+            for (let i = 0; i < elements.length; i++) {
+                steps++;
+                stepsEl.textContent = steps;
+                elements[i].classList.add('highlight-search');
+                await sleep(300);
+                if (parseInt(elements[i].textContent) === target) {
+                    elements[i].classList.remove('highlight-search');
+                    elements[i].classList.add('highlight-found');
+                    found = true;
+                    break;
+                }
+                elements[i].classList.remove('highlight-search');
+            }
+            if (!found) showStatus('search-status', `Angka ${target} tidak ditemukan.`, true);
+        }
+
+        async function binarySearch(target) {
+            const stepsEl = document.getElementById('binary-steps');
+            const elements = binaryContainer.children;
+            let steps = 0;
+            let low = 0;
+            let high = elements.length - 1;
+            let found = false;
+
+            while (low <= high) {
+                steps++;
+                stepsEl.textContent = steps;
+                resetHighlights(false); // only reset colors, not steps
+                let mid = Math.floor((low + high) / 2);
+                
+                for(let i = 0; i < elements.length; i++) {
+                    if (i < low || i > high) {
+                         elements[i].classList.add('highlight-discard');
                     }
                 }
+
+                elements[mid].classList.add('highlight-search');
+                await sleep(1000);
+
+                const midVal = parseInt(elements[mid].textContent);
+                if (midVal === target) {
+                    elements[mid].classList.remove('highlight-search');
+                    elements[mid].classList.add('highlight-found');
+                    found = true;
+                    break;
+                } else if (midVal < target) {
+                    low = mid + 1;
+                } else {
+                    high = mid - 1;
+                }
+                elements[mid].classList.remove('highlight-search');
+            }
+            if (!found) showStatus('search-status', `Angka ${target} tidak ditemukan.`, true);
+        }
+        
+        function resetHighlights(resetSteps = true) {
+            document.querySelectorAll('.data-element').forEach(el => {
+                el.classList.remove('highlight-search', 'highlight-found', 'highlight-discard');
             });
+            if (resetSteps) {
+                document.getElementById('linear-steps').textContent = '0';
+                document.getElementById('binary-steps').textContent = '0';
+                showStatus('search-status', '', false, 0);
+            }
+        }
 
-            const updateChart = () => {
-                const size = parseInt(dataSizeSlider.value);
-                dataSizeLabel.textContent = size;
-                performanceChart.data.datasets[0].data[0] = size;
-                performanceChart.data.datasets[0].data[1] = Math.ceil(Math.log2(size));
-                performanceChart.update();
-            };
+        function resetSearch() {
+            if (isWorking) return;
+            generateSearchData();
+            renderSearchArrays();
+            resetHighlights();
+        }
 
-            dataSizeSlider.addEventListener('input', updateChart);
-            updateChart();
-
-            // Back to Dashboard Button Logic
-            const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
-            backToDashboardBtn.addEventListener('click', () => {
-                window.location.href = 'https://masawan1.github.io/dashboardinformatika/';
-            });
-        });
+        // --- Inisialisasi Saat Halaman Dimuat ---
+        window.onload = () => {
+            renderStack();
+            renderQueue();
+            renderInsertVisuals();
+            resetSearch();
+        };
     </script>
 </body>
 </html>
